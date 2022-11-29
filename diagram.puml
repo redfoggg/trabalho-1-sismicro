@@ -1,0 +1,70 @@
+@startuml Classes para o projeto de um sistema de gerenciamento de luminárias LED 
+
+
+' Funćões do sistema
+' Controlador é uma unidade autônoma que realiza o monitoramento e o controle
+' remoto das luminárias com tecnologia LED. Tem por finalidade substituir o
+' sistema fotoelétrico convencional por sistemas inteligentes. Esse dispositivo
+' é conectado à luminária através de uma tomada acoplada no corpo do
+' equipamento. O controlador armazena os dados sobre o estado de funcionamento
+' do dispositivo, alarmes, uso de energia, consumo, tensão, corrente, fator de
+' potência e localização geográfica para, depois, transmiti-los, sem fio, ao
+' concentrador.
+class Controlador {
+  .. Entradas e saídas ..
+  - OUT_acionarLED          : bool ' indica se o LED está ligado ou desligado
+  - INP_botaoDesligarLED    : bool ' entrada do botão para desligar o LED
+  - INP_sensorFotoeletrico  : int  ' entrada do sensor fotoelétrico
+  - INP_medidorTensao       : int  ' entrada do medidor de tensão
+  - INP_medidorCorrente     : int  ' entrada do medidor de corrente
+  - INP_medidorTempertura   : int  ' entrada do medidor de temperatura
+
+  .. Rotinas ..
+  - controlaLED()           : void ' liga o LED caso as condições sejam atendidas
+  - medeTensao()            : void ' mede a tensão
+  - medeCorrente()          : void ' mede a corrente
+  - medeTemperatura()       : void ' mede a temperatura
+  - enviaDados()            : void ' envia os dados para o concentrador
+  - desligaTudo()           : void ' desliga o LED e o controlador
+
+}
+
+
+' Concentrador: gerencia e armazena os dados de um grupo de controladores e os
+' transmite para um servidor. Ele também recebe comandos da central e direciona
+' para o controlador adequado.
+class Concentrador {
+  .. Entradas e saídas ..
+  ' Primeiro controlador
+  - INP_sensorFotoeletrico_0  : int  ' entrada do sensor fotoelétrico do controlador 0
+  - INP_botaoDesligarLED_0    : bool ' entrada do botão para desligar o LED do controlador 0
+  - INP_medidorTensao_0       : int  ' entrada do medidor de tensão do controlador 0
+  - INP_medidorCorrente_0     : int  ' entrada do medidor de corrente do controlador 0
+  - INP_medidorTempertura_0   : int  ' entrada do medidor de temperatura do controlador 0
+  - OUT_display_0             : int  ' saída para o display do controlador 0
+  ' Segundo controlador
+  - INP_sensorFotoeletrico_1  : int  ' entrada do sensor fotoelétrico do controlador 1
+  - INP_botaoDesligarLED_1    : bool ' entrada do botão para desligar o LED do controlador 1
+  - INP_medidorTensao_1       : int  ' entrada do medidor de tensão do controlador 1
+  - INP_medidorCorrente_1     : int  ' entrada do medidor de corrente do controlador 1
+  - INP_medidorTempertura_1   : int  ' entrada do medidor de temperatura do controlador 1
+  - OUT_display_1             : int  ' saída para o display do controlador 1
+
+  - INP_botaoDesligaTudo      : bool ' botão para desligar todos os controladores
+
+  .. Rotinas ..
+  - recebeDados(int numSerie) : void ' recebe os dados do controlador
+  - desligaTudo()             : void ' envia os comandos para os controladores desligarem
+}
+
+t
+' Central: organiza e disponibiliza informações sobre os pontos de iluminação
+' pública para a central de comando. Dessa forma, é possível analisar e tratar
+' dados específicos de cada controlador enviados pelo concentrador. O software
+' possibilita, também, a implementação da Internet das Coisas (IoT) em IP,
+' permitindo o controle de parques de iluminação de forma remota e em tempo
+' real.
+class Central: ' Não será preciso implementar a central
+
+
+@enduml

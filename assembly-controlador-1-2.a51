@@ -26,8 +26,29 @@ inicio:
 	clr P0.5 ; seta P0.5 em baixo nível
 	clr P0.6 ; seta P0.6 em baixo nível
 	clr P0.7 ; seta P0.7 em baixo nível
-	ajmp  loop	;jmp para loop
-   
+	; ajmp  loop	;jmp para loop
+
+serialBus:
+	mov			P2,#0FFh		;Seta P2 como entrada de dados
+	mov			SCON,#50h		;8 bits, 1 stop bit, REN ligado
+	mov			TMOD,#20h		;Timer1 no modo 2
+	mov			TH1,#-3			;Baud rate 9600 (FDh = 253d = 256 - 3)
+	setb		TR1					;Liga o timer1
+
+loop1: 
+	mov			A,P2				;Lê P2 e salva no acc
+	mov			SBUF,A  		;Transmite valor salvo em P2
+
+Aux1: 
+	jnb			TI,Aux1  		;Aguarda a transmissão finalizar
+	clr			TI					;Limpa a flag e vai para Aux2
+Aux2: 
+	jnb			RI,Aux2			;Aguarda a recepção do byte
+	clr			RI					;Limpa a flag de recepção
+	mov			A,SBUF			;Lê o valor recebido e salva em A
+	mov			P1,A				;Salva o valor em P1
+	jmp			loop1				;Volta ao loop inicial para nova transmissão
+
 loop:
 	 jb P0.2, 0013h
 	 jb P0.3, 0013h

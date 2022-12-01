@@ -21,36 +21,92 @@ $INCLUDE (8051.MCU)
 ; RESET and INTERRUPT VECTORS
 ;====================================================================
 
-      ; Reset Vector
-      org   0000h
-      jmp   Start
+    ; Reset Vector
+    org     0000h
+    jmp     inicio
 
+;-----Rotina de interrupção INT0 Botão + relé ------
+    org     0003h                     ;endereço da interrupção do INT0
+    mov     A, #01h
+    acall   enviaDados    ;retorna da interrupcao
+    ajmp    retorna_da_interrupcao
+
+;-----Rotina de Interrupção SERIAL ------
+    org      0023h                   ;endereço da interrupção do SERIAL
+    acall    recebeDados             ;recebe os dados via serial
+    acall    trataDados              ;
+    ajmp     retorna_da_interrupcao  ;retorna da interrupção
+
+;------Final das Rotinas de interrupção  ------
 ;====================================================================
 ; CODE SEGMENT
 ;====================================================================
 
-      org   0100h
-Start:
-      mov     P2,#0FFh  ;Seta P2 como entrada de dados
-      mov     SCON,#50H
-      mov     TMOD,#20H
-      mov     TH1,#-3
-      setb    TR1
+    org   0100h
+inicio:
+    setb    IP.4
+    clr     TCON.0
+    clr     TCON.2
+    mov     ie, #10010101b    ;habilita interrupção INT0, INT1, serial e global
+    mov     ip, #00000100b    ;INT0 com baixa prioridade e INT1 com alta prioridade
+    mov     tcon, #00000101b  ;INT0 e INT1 como sensivel a borda
+    clr     P0.5              ; seta P0.5 em baixo nível
+    clr     P0.6              ; seta P0.6 em baixo nível
+    clr     P0.7              ; seta P0.7 em baixo nível
+    ; Configura a porta serial
+    mov     TMOD,#20H         ;Timer 1, mode 2
+    mov     TH1,#0FDH         ;baud rate: 9600
+    mov     SCON,#50H         ;8-bit, 1 stop bit, 1 start bit (MODO1)
+    setb    TR1               ;Start timer
+  ; ajmp  loop  ;jmp para loop
 
-Aux1: 
-      jnb     RI,Aux1   ;Aguarda pela recepção do byte
-      clr     RI        ;Limpa a flag de recepção
-      mov     A,SBUF    ;Lê o byte lido
-      mov     P1,A      ;Salva em P1
-      mov     A,P2      ;Lê o valor em P2
-      mov     SBUF,A    ;Transmite o valor de P2
-Aux2:
-      jnb     TI,Aux2   ;Aguarda a transmissão finalizar
-      clr     TI        ;Limpa flag de transmissão
-      jmp     Aux1      ;Retorna para receber próximo byte
+Loop: 
+    jmp Loop
 
-Loop:	
-      jmp Loop
+retorna_da_interrupcao:
+    reti          ; retorna da interrupção
 
+trataDados:
+    ; escolhe qual controlador é
+    mov     R6, A
+    anl     A, #11000000b
+    rl      A
+    rl      A
+if_C0:
+    cjne    A, #0, if_C1
+    ajmp    controlador_0
+if_C1:
+    cjne    A, #1, if_C2
+    ajmp    controlador_1
+if_C2:
+    cjne    A, #2, if_C3
+    ret
+if_C3:
+    cjne    A, #3, td_ret
+    ret
+controlador_0:
+    mov     P1, R6
+    ajmp    td_ret
+controlador_1:
+    mov     P2, R6
+td_ret:
+    ret
+
+enviaDados:
+    clr     IE.4      ; desabilita interrupção serial
+    mov     SBUF,A    ;armazena no buffer os dados do ACC
+laco:
+    jnb     TI,laco   ;espera pelo ultimo dado ser enviado
+    clr     TI        ;limpa o TI
+    setb    IE.4      ;habilita interrupção serial
+    ret               ;retorna para quem chamou a rotina
+
+recebeDados:
+    clr     IE.4            ;desabilita a interrupção serial
+    jnb     RI,recebeDados  ;espera receber dados
+    mov     A,SBUF          ;armazena os dados recebidos no acc
+    clr     RI              ;limpa o RI
+    setb    IE.4            ;habilita a interrupção serial
+    ret                     ;retorna para quem chamou a rotina
 ;====================================================================
-      END
+    END

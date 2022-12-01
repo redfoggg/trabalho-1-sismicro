@@ -26,7 +26,6 @@ class Controlador {
   - medeTemperatura()       : void ' mede a temperatura
   - enviaDados()            : void ' envia os dados para o concentrador
   - desligaTudo()           : void ' desliga o LED e o controlador
-
 }
 
 

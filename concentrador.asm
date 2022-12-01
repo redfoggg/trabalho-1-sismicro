@@ -50,9 +50,6 @@ inicio:
     mov     ie, #10010101b    ;habilita interrupção INT0, INT1, serial e global
     mov     ip, #00000100b    ;INT0 com baixa prioridade e INT1 com alta prioridade
     mov     tcon, #00000101b  ;INT0 e INT1 como sensivel a borda
-    clr     P0.5              ; seta P0.5 em baixo nível
-    clr     P0.6              ; seta P0.6 em baixo nível
-    clr     P0.7              ; seta P0.7 em baixo nível
     ; Configura a porta serial
     mov     TMOD,#20H         ;Timer 1, mode 2
     mov     TH1,#0FDH         ;baud rate: 9600

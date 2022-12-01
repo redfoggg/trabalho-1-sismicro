@@ -3,9 +3,8 @@ ajmp inicio
 
 ;-----Rotina de interrupção INT0 Botão + relé ------
     org     0003h                     ;endereço da interrupção do INT0
-    jb      P0.1,desliga_lampada
-    jnb     P0.0,desliga_lampada
-    jb      P0.0,liga_lampada
+    jb      P0.1,latchLamp
+    jnb     P0.0,latchLamp
     ajmp    retorna_da_interrupcao    ;retorna da interrupcao
 
 
@@ -17,6 +16,7 @@ ajmp inicio
 ;-----Rotina de Interrupção SERIAL ------
     org     0023h                   ;endereço da interrupção do SERIAL
     acall   recebeDados             ;recebe os dados
+    anl     A, #01H                ;limpa os 7 bits menos significativos
     jnz     desliga_tudo            ;se não for zero em ACC desliga tudo
     ajmp    retorna_da_interrupcao  ;retorna da interrupção
 
@@ -41,28 +41,17 @@ inicio:
   ; ajmp  loop  ;jmp para loop
 
 main:
-    jmp     liga_lampada
     ; delay de 5 segundos
-    acall   delay
-    acall   delay
-    acall   delay
-    acall   delay
+    ; acall   delay
+    ; acall   delay
+    ; acall   delay
+    ; acall   delay
     acall   delay
     acall   moveDados   ; move os dos pinos para o ACC
     acall   enviaDados  ; envia os dados em ACC via serial
     ajmp    main
 
 moveDados:
-    ; mov     R7.0,P0.0   ; not RL1
-    ; mov     R7.1,P0.1   ; B1
-    ; mov     R7.2,P0.2   ; T1
-    ; mov     R7.3,P0.3   ; A1
-    ; mov     R7.4,P0.4   ; V1
-    ; mov     R7.5,P1.0   ; estado da lâmpada
-    ; esses 2 ultimos bits mais significativos podem indicar qual o
-    ; controlador podendo indicar até 4 controladores.
-    ; mov     R7.6,#0000h ; controlador 0
-    ; mov     R7.7,#0000h ; 2² = 4 controladores
     mov    A, P0
     ; mask bit 5, 6 and 7
     anl    A, #00011111b ; remove os 3 bits mais significativos
@@ -81,8 +70,8 @@ moveDados:
     rlc     A
     ;¨or¨ para juntar os 2 bytes
     orl     A, R7
-    orl     A, #01000000b ; seta o segundo bit mais significativo
-    ; A = 01XXXXXX
+    orl     A, #01000000b
+    ; A = 00XXXXXX
     ; 00XXXXXX = controlador 0
     ; 01XXXXXX = controlador 1
     ; 10XXXXXX = controlador 2
@@ -95,7 +84,16 @@ desliga_tudo:
 
 liga_lampada:
     setb    P1.0                    ; seta P1.0 em alto nível
-    ajmp    retorna_da_interrupcao  ;retorna da interrupção
+    ajmp    retorna_da_interrupcao
+
+latchLamp:
+    mov     R1, A       ; salva o valor de A
+    mov     A, P1       ; move o valor de P1 para A
+    cpl     A           ; inverte os bits
+    anl     A, #01h     ; mantem apenas o bit menos significativo
+    mov     P1, A       ; escreve os bits invertidos no pino P0 de volta
+    mov     A, R1       ; recupera o valor de A
+    ajmp    retorna_da_interrupcao
 
 desliga_lampada:
     clr     P1.0  ; seta P1.0 em baixo nível
@@ -108,7 +106,7 @@ retorna_da_interrupcao:
 delay:
     mov     R0,#255D
 D1:
-    mov     R4,#92D
+    mov     R4,#92D 
 timer:
     mov     TH0,#0FFH;
     mov     TL0,#000H;

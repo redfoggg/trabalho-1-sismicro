@@ -44,8 +44,8 @@ main:
     ; delay de 5 segundos
     ; acall   delay
     ; acall   delay
-    ; acall   delay
-    ; acall   delay
+    acall   delay
+    acall   delay
     acall   delay
     acall   moveDados   ; move os dos pinos para o ACC
     acall   enviaDados  ; envia os dados em ACC via serial
@@ -106,7 +106,7 @@ retorna_da_interrupcao:
 delay:
     mov     R0,#255D
 D1:
-    mov     R4,#92D 
+    mov     R4,#92D
 timer:
     mov     TH0,#0FFH;
     mov     TL0,#000H;

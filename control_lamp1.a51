@@ -43,9 +43,9 @@ inicio:
 main:
     ; delay de 5 segundos
     ; acall   delay
-    ; acall   delay
-    ; acall   delay
-    ; acall   delay
+    acall   delay
+    acall   delay
+    acall   delay
     acall   delay
     acall   moveDados   ; move os dos pinos para o ACC
     acall   enviaDados  ; envia os dados em ACC via serial
